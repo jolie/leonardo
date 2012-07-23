@@ -2,5 +2,6 @@ constants {
 	Location_Leonardo = "socket://localhost:8000/",
 	DebugHttp = 0,
 	DebugHttpContent = 0,
-	RootContentDirectory = "www/"
+	RootContentDirectory = "www/",
+	DefaultPage = "index.html"
 }

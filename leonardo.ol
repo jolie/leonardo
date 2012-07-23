@@ -59,9 +59,9 @@ main
 			s.regex = "\\?";
 			split@StringUtils( s )( s );
 			
-			// Default page: index.html 
+			// Default page
 			if ( s.result[0] == "" ) {
-				s.result[0] = "index.html"
+				s.result[0] = DefaultPage
 			};
 			file.filename = documentRootDirectory + s.result[0];
 
