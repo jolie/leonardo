@@ -46,6 +46,8 @@ init
 {
 	if ( is_defined( args[0] ) ) {
 		documentRootDirectory = args[0]
+	} else {
+		documentRootDirectory = RootContentDirectory
 	}
 }
 
