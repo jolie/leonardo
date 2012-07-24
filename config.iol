@@ -6,7 +6,7 @@ constants {
 	RootContentDirectory = "www/",
 
 	// The default page to serve in case clients do not specify one
-	DefaultPage = "index.html"
+	DefaultPage = "index.html",
 
 	// Print debug messages for all exchanged HTTP messages
 	DebugHttp = false,
