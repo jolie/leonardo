@@ -30,7 +30,7 @@ RequestResponse:
 
 inputPort HTTPInput {
 Protocol: http {
-	.keepAlive = 0; // Do not keep connections open
+	.keepAlive = true; // Keep connections open
 	.debug = DebugHttp; 
 	.debug.showContent = DebugHttpContent;
 	.format -> format;
