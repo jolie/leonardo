@@ -1,5 +1,5 @@
 /*
-   Copyright 2008-2012 Fabrizio Montesi <famontesi@gmail.com>
+   Copyright 2008-2014 Fabrizio Montesi <famontesi@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -62,9 +62,18 @@ main
 			split@StringUtils( s )( s );
 			
 			// Default page
-			if ( s.result[0] == "" ) {
-				s.result[0] = DefaultPage
-			};
+                        shouldAddIndex = false;
+                        if ( s.result[0] == "" ) {
+                                shouldAddIndex = true
+                        } else {
+                                e = s.result[0];
+                                e.suffix = "/";
+                                endsWith@StringUtils( e )( shouldAddIndex )
+                        };
+                        if ( shouldAddIndex ) {
+                                s.result[0] += DefaultPage
+                        };
+			
 			file.filename = documentRootDirectory + s.result[0];
 
 			getMimeType@File( file.filename )( mime );
