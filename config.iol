@@ -8,9 +8,6 @@ constants {
 	// The default page to serve in case clients do not specify one
 	DefaultPage = "index.html",
 
-	// Mimetypes (content types) to compress ("" = none, "*" = everything)
-	CompressionTypes = "text/html text/css text/plain text/xml application/json",
-
 	// Print debug messages for all exchanged HTTP messages
 	DebugHttp = false,
 

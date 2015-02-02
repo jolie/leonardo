@@ -35,7 +35,6 @@ Protocol: http {
 	.debug.showContent = DebugHttpContent;
 	.format -> format;
 	.contentType -> mime;
-	.compressionTypes = CompressionTypes;
 
 	.default = "default"
 }
