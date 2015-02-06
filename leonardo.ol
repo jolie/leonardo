@@ -35,6 +35,7 @@ Protocol: http {
 	.debug.showContent = DebugHttpContent;
 	.format -> format;
 	.contentType -> mime;
+	.statusCode -> statusCode;
 
 	.default = "default"
 }
@@ -55,7 +56,7 @@ main
 {
 	[ default( request )( response ) {
 		scope( s ) {
-			install( FileNotFound => println@Console( "File not found: " + file.filename )() );
+			install( FileNotFound => println@Console( "File not found: " + file.filename )(); statusCode = 404 );
 
 			s = request.operation;
 			s.regex = "\\?";
