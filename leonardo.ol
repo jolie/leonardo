@@ -31,7 +31,7 @@ RequestResponse:
 inputPort HTTPInput {
 Protocol: http {
 	.keepAlive = true; // Keep connections open
-	.debug = DebugHttp; 
+	.debug = DebugHttp;
 	.debug.showContent = DebugHttpContent;
 	.format -> format;
 	.contentType -> mime;
@@ -58,23 +58,19 @@ main
 		scope( s ) {
 			install( FileNotFound => println@Console( "File not found: " + file.filename )(); statusCode = 404 );
 
-			s = request.operation;
-			s.regex = "\\?";
-			split@StringUtils( s )( s );
-			
+			split@StringUtils( request.operation { .regex = "\\?" } )( s );
+
 			// Default page
-                        shouldAddIndex = false;
-                        if ( s.result[0] == "" ) {
-                                shouldAddIndex = true
-                        } else {
-                                e = s.result[0];
-                                e.suffix = "/";
-                                endsWith@StringUtils( e )( shouldAddIndex )
-                        };
-                        if ( shouldAddIndex ) {
-                                s.result[0] += DefaultPage
-                        };
-			
+			shouldAddIndex = false;
+      if ( s.result[0] == "" ) {
+        shouldAddIndex = true
+      } else {
+        endsWith@StringUtils( s.result[0] { .suffix = "/" } )( shouldAddIndex )
+      };
+      if ( shouldAddIndex ) {
+        s.result[0] += DefaultPage
+      };
+
 			file.filename = documentRootDirectory + s.result[0];
 
 			getMimeType@File( file.filename )( mime );
