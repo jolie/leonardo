@@ -98,6 +98,7 @@ main
 			install( FileNotFound => println@Console( "File not found: " + file.filename )(); statusCode = 404 );
 
 			split@StringUtils( request.operation { .regex = "\\?" } )( s );
+			query = s.result[1];
 
 			// Default page
 			shouldAddIndex = false;
@@ -128,9 +129,15 @@ main
 			readFile@File( file )( response );
 
 			install( PreResponseFault => response = s.PreResponseFault.response; statusCode = s.PreResponseFault.statusCode );
-			run@PreResponseHook(response)(response)
+			with( decoratedResponse ) {
+				.config -> config;
+				.request.path -> s.result[0];
+				.request.query -> query;
+				.content -> response
+			};
+			run@PreResponseHook( decoratedResponse )( response )
 		}
 	} ] {
-		run@PostResponseHook(response)()
+		run@PostResponseHook( decoratedResponse )()
 	}
 }

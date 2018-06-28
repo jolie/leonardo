@@ -2,7 +2,8 @@ FROM alpine as Build
 
 RUN apk update && \
 		apk add git && \
-		mkdir -p /var/lib/leonardo/www
+		mkdir -p /server/leonardo
+
 RUN git clone --depth=1 https://github.com/jolie/leonardo.git /server/leonardo
 RUN rm -rf /server/leonardo/docker
 RUN rm -rf /server/leonardo/.git
@@ -12,7 +13,7 @@ RUN rm -rf /server/leonardo/.git
 FROM jolielang/jolie
 WORKDIR /
 RUN mkdir -p /var/lib/leonardo/www
-COPY server /
+COPY --from=Build /server /server
 
 WORKDIR /server/leonardo
 
