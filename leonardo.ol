@@ -94,22 +94,26 @@ init
 main
 {
 	[ default( request )( response ) {
+		runPostResponseHook = false;
 		scope( s ) {
-			install( FileNotFound => println@Console( "File not found: " + file.filename )(); statusCode = 404 );
+			install( FileNotFound =>
+				println@Console( "File not found: " + file.filename )();
+				statusCode = 404
+			);
 
 			split@StringUtils( request.operation { .regex = "\\?" } )( s );
 			query = s.result[1];
 
 			// Default page
 			shouldAddIndex = false;
-      if ( s.result[0] == "" ) {
-        shouldAddIndex = true
-      } else {
-        endsWith@StringUtils( s.result[0] { .suffix = "/" } )( shouldAddIndex )
-      };
-      if ( shouldAddIndex ) {
-        s.result[0] += DefaultPage
-      };
+			if ( s.result[0] == "" ) {
+				shouldAddIndex = true
+			} else {
+				endsWith@StringUtils( s.result[0] { .suffix = "/" } )( shouldAddIndex )
+			};
+			if ( shouldAddIndex ) {
+				s.result[0] += DefaultPage
+			};
 
 			checkForMaliciousPath;
 
@@ -128,16 +132,22 @@ main
 
 			readFile@File( file )( response );
 
-			install( PreResponseFault => response = s.PreResponseFault.response; statusCode = s.PreResponseFault.statusCode );
+			install( PreResponseFault =>
+				response = s.PreResponseFault.response;
+				statusCode = s.PreResponseFault.statusCode
+			);
 			with( decoratedResponse ) {
 				.config -> config;
 				.request.path -> s.result[0];
 				.request.query -> query;
 				.content -> response
 			};
-			run@PreResponseHook( decoratedResponse )( response )
+			run@PreResponseHook( decoratedResponse )( response );
+			runPostResponseHook = true
 		}
 	} ] {
-		run@PostResponseHook( decoratedResponse )()
+		if ( runPostResponseHook ) {
+			run@PostResponseHook( decoratedResponse )()
+		}
 	}
 }
