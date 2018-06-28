@@ -102,7 +102,9 @@ main
 			);
 
 			split@StringUtils( request.operation { .regex = "\\?" } )( s );
-			query = s.result[1];
+			if ( #s.result > 1 ) {
+				query = s.result[1]
+			};
 
 			// Default page
 			shouldAddIndex = false;
@@ -117,7 +119,9 @@ main
 
 			checkForMaliciousPath;
 
-			file.filename = config.wwwDirectory + s.result[0];
+			requestPath = s.result[0];
+
+			file.filename = config.wwwDirectory + requestPath;
 
 			getMimeType@File( file.filename )( mime );
 			split@StringUtils( mime { .regex = "/" } )( s );
@@ -132,18 +136,20 @@ main
 
 			readFile@File( file )( response );
 
-			install( PreResponseFault =>
-				response = s.PreResponseFault.response;
-				statusCode = s.PreResponseFault.statusCode
-			);
-			with( decoratedResponse ) {
-				.config -> config;
-				.request.path -> s.result[0];
-				.request.query -> query;
-				.content -> response
-			};
-			run@PreResponseHook( decoratedResponse )( response );
-			runPostResponseHook = true
+			if ( file.format == "text" ) {
+				install( PreResponseFault =>
+					response = s.PreResponseFault.response;
+					statusCode = s.PreResponseFault.statusCode
+				);
+				with( decoratedResponse ) {
+					.config -> config;
+					.request.path -> requestPath;
+					.request.query -> query;
+					.content -> response
+				};
+				run@PreResponseHook( decoratedResponse )( response );
+				runPostResponseHook = true
+			}
 		}
 	} ] {
 		if ( runPostResponseHook ) {

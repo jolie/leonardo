@@ -6,7 +6,7 @@ type DecoratedResponse:void {
 	.config:LeonardoConfig
 	.request:void {
 		.path:string
-		.query:string
+		.query:string | void
 	}
 	.content:string
 }
