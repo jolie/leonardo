@@ -3,7 +3,7 @@ include "hooks_types.iol"
 service PreResponseHook {
 Interfaces: PreResponseHookIface
 main {
-	run(mesg)(mesg) {
+	run(mesg)(mesg.content) {
 		nullProcess
 	}
 }
