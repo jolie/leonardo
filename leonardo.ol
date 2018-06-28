@@ -143,8 +143,8 @@ main
 				);
 				with( decoratedResponse ) {
 					.config -> config;
-					.request.path -> requestPath;
-					.request.query -> query;
+					.request.path = requestPath;
+					.request.query = query;
 					.content -> response
 				};
 				run@PreResponseHook( decoratedResponse )( response );
