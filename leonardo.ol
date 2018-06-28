@@ -102,9 +102,6 @@ main
 			);
 
 			split@StringUtils( request.operation { .regex = "\\?" } )( s );
-			if ( #s.result > 1 ) {
-				query = s.result[1]
-			};
 
 			// Default page
 			shouldAddIndex = false;
@@ -144,7 +141,6 @@ main
 				with( decoratedResponse ) {
 					.config -> config;
 					.request.path = requestPath;
-					.request.query = query;
 					.content -> response
 				};
 				run@PreResponseHook( decoratedResponse )( response );
