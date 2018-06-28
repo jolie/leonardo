@@ -1,9 +1,9 @@
 constants {
 	// The deployment location for reaching the Leonardo web server
-	Location_Leonardo = "socket://localhost:8000/",
+	Location_Leonardo = "socket://localhost:8080/",
 
 	// The root directory in which Leonardo will look for content to serve to clients
-	RootContentDirectory = "www/",
+	RootContentDirectory = "/var/lib/leonardo/www/",
 
 	// The default page to serve in case clients do not specify one
 	DefaultPage = "index.html",
