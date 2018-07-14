@@ -7,7 +7,7 @@ type DecoratedResponse:void {
 	.request:void {
 		.path:string
 	}
-	.content:string
+	.content?:string
 }
 
 type PreResponseFaultType:void {
@@ -16,7 +16,7 @@ type PreResponseFaultType:void {
 }
 
 interface PreResponseHookIface {
-RequestResponse: run(DecoratedResponse)(string) throws PreResponseFault(PreResponseFaultType)
+RequestResponse: run(DecoratedResponse)(string|void) throws PreResponseFault(PreResponseFaultType)
 }
 
 interface PostResponseHookIface {

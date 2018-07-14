@@ -133,18 +133,23 @@ main
 
 			readFile@File( file )( response );
 
-			if ( file.format == "text" ) {
-				install( PreResponseFault =>
-					response = s.PreResponseFault.response;
-					statusCode = s.PreResponseFault.statusCode
-				);
-				with( decoratedResponse ) {
-					.config -> config;
-					.request.path = requestPath;
+			runPostResponseHook = true;
+
+			install( PreResponseFault =>
+				response = s.PreResponseFault.response;
+				statusCode = s.PreResponseFault.statusCode;
+				runPostResponseHook = false
+			);
+			with( decoratedResponse ) {
+				.config -> config;
+				.request.path = requestPath;
+				if ( file.format == "text" ) {
 					.content -> response
-				};
-				run@PreResponseHook( decoratedResponse )( response );
-				runPostResponseHook = true
+				}
+			};
+			run@PreResponseHook( decoratedResponse )( newResponse );
+			if ( !(newResponse instanceof void) ) {
+				response -> newResponse
 			}
 		}
 	} ] {
