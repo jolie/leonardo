@@ -15,8 +15,10 @@ type PreResponseFaultType:void {
 	.response:string
 }
 
+type MaybeString: void | string
+
 interface PreResponseHookIface {
-RequestResponse: run(DecoratedResponse)(string|void) throws PreResponseFault(PreResponseFaultType)
+RequestResponse: run(DecoratedResponse)(MaybeString) throws PreResponseFault(PreResponseFaultType)
 }
 
 interface PostResponseHookIface {
