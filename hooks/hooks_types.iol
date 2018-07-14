@@ -1,5 +1,5 @@
 type LeonardoConfig:void {
-	.wwwDirectory:string
+	.wwwDir:string
 }
 
 type DecoratedResponse:void {

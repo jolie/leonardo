@@ -83,9 +83,9 @@ init
 	maliciousSubstrings[1] = ".svn";
 
 	if ( is_defined( args[0] ) ) {
-		config.wwwDirectory = args[0]
+		config.wwwDir = args[0]
 	} else {
-		config.wwwDirectory = RootContentDirectory
+		config.wwwDir = RootContentDirectory
 	};
 	format = "html";
 	println@Console( "Leonardo started at " + global.inputPorts.HTTPInput.location )()
@@ -118,7 +118,7 @@ main
 
 			requestPath = s.result[0];
 
-			file.filename = config.wwwDirectory + requestPath;
+			file.filename = config.wwwDir + requestPath;
 
 			getMimeType@File( file.filename )( mime );
 			split@StringUtils( mime { .regex = "/" } )( s );
