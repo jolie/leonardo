@@ -18,9 +18,13 @@ include "console.iol"
 include "file.iol"
 include "string_utils.iol"
 include "protocols/http.iol"
+include "types/Binding.iol"
+include "runtime.iol"
 
 include "config.iol"
-include "hooks.iol"
+include "types/PreResponseHookIface.iol"
+include "types/PostResponseHookIface.iol"
+include "types/LeonardoAdminIface.iol"
 
 execution { concurrent }
 
@@ -43,6 +47,19 @@ Protocol: http {
 }
 Location: Location_Leonardo
 Interfaces: HTTPInterface
+}
+
+outputPort PreResponseHook {
+Interfaces: PreResponseHookIface
+}
+
+outputPort PostResponseHook {
+Interfaces: PostResponseHookIface
+}
+
+inputPort Admin {
+Location: "local"
+Interfaces: LeonardoAdminIface
 }
 
 define setCacheHeaders
@@ -77,18 +94,57 @@ define checkForMaliciousPath
 	}
 }
 
+define loadHooks
+{
+	if ( is_defined( config.PreResponseHook ) ) {
+		PreResponseHook << config.PreResponseHook
+	} else {
+		loadEmbeddedService@Runtime( {
+			.filepath = "hooks/pre_response.ol",
+			.type = "Jolie"
+		} )( PreResponseHook.location )
+	};
+	if ( is_defined( config.PostResponseHook ) ) {
+		PostResponseHook << config.PostResponseHook
+	} else {
+		loadEmbeddedService@Runtime( {
+			.filepath = "hooks/post_response.ol",
+			.type = "Jolie"
+		} )( PostResponseHook.location )
+	}
+}
+
 init
 {
 	maliciousSubstrings[0] = "..";
 	maliciousSubstrings[1] = ".svn";
+	maliciousSubstrings[2] = ".git"
+}
 
+init
+{
 	if ( is_defined( args[0] ) ) {
 		config.wwwDir = args[0]
 	} else {
 		config.wwwDir = RootContentDirectory
 	};
+	if ( !Standalone ) {
+		config( config )()
+	};
+	loadHooks;
+	undef( config.PreResponseHook );
+	undef( config.PostResponseHook );
+
+	toAbsolutePath@File( config.wwwDir )( config.wwwDir );
+	getFileSeparator@File()( fs );
+	config.wwwDir += fs;
+
+	getServiceDirectory@File()( dir );
+	setMimeTypeFile@File( dir + fs + "META-INF" + fs + "mime.types" )();
+	undef( dir ); undef( fs );
+
 	format = "html";
-	println@Console( "Leonardo started at " + global.inputPorts.HTTPInput.location )()
+	println@Console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + config.wwwDir )()
 }
 
 main

@@ -1,14 +1,4 @@
-type LeonardoConfig:void {
-	.wwwDir:string
-}
-
-type DecoratedResponse:void {
-	.config:LeonardoConfig
-	.request:void {
-		.path:string
-	}
-	.content?:string
-}
+include "hooks_types.iol"
 
 type PreResponseFaultType:void {
 	.statusCode:int
@@ -19,8 +9,4 @@ type MaybeString: void | string
 
 interface PreResponseHookIface {
 RequestResponse: run(DecoratedResponse)(MaybeString) throws PreResponseFault(PreResponseFaultType)
-}
-
-interface PostResponseHookIface {
-RequestResponse: run(DecoratedResponse)(void)
 }

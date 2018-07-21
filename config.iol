@@ -12,5 +12,8 @@ constants {
 	DebugHttp = false,
 
 	// Add the content of every HTTP message to their debug messages
-	DebugHttpContent = false
+	DebugHttpContent = false,
+
+	// If false, we wait for an initialisation message from an embedder
+	Standalone = true
 }
