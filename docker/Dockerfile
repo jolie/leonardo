@@ -2,19 +2,19 @@ FROM alpine as Build
 
 RUN apk update && \
 		apk add git && \
-		mkdir -p /server/leonardo
+		mkdir -p /app/leonardo
 
-RUN git clone --depth=1 https://github.com/jolie/leonardo.git /server/leonardo
-RUN rm -rf /server/leonardo/docker
-RUN rm -rf /server/leonardo/.git
+RUN git clone --depth=1 https://github.com/jolie/leonardo.git /app/leonardo
+RUN rm -rf /app/leonardo/docker
+RUN rm -rf /app/leonardo/.git
 
 
 # Start from scratch, copy leonardo
 FROM jolielang/jolie
 WORKDIR /
-RUN mkdir -p /var/lib/leonardo/www
-COPY --from=Build /server /server
+# RUN mkdir -p /web
+COPY --from=Build /app /app
 
-WORKDIR /server/leonardo
+WORKDIR /app/leonardo/cmd/leonardo
 
-CMD ["jolie","leonardo.ol"]
+CMD ["jolie","main.ol"]
