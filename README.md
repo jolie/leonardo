@@ -12,7 +12,7 @@ First, pull the image from Docker Hub: `docker pull jolielang/leonardo`.
 Assume that you have your static content in directory `myWWW` (replace this with your actual directory), then you can just run the following command and Leonardo will start.
 
 ```
-docker run -it --rm -v "$(pwd)"/myWWW:/web -w /server/leonardo -e LEONARDO_WWW=/web -p 8080:8080 jolielang/leonardo
+docker run -it --rm -v "$(pwd)"/myWWW:/web -e LEONARDO_WWW=/web -p 8080:8080 jolielang/leonardo
 ```
 
 Go ahead and browse [http://localhost:8080/](http://localhost:8080/).
