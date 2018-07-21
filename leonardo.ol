@@ -123,9 +123,12 @@ init
 
 init
 {
+	getenv@Runtime( "LEONARDO_WWW" )( config.wwwDir );
 	if ( is_defined( args[0] ) ) {
 		config.wwwDir = args[0]
-	} else {
+	};
+
+	if ( !is_defined( config.wwwDir ) || config.wwwDir instanceof void ) {
 		config.wwwDir = RootContentDirectory
 	};
 	if ( !Standalone ) {
