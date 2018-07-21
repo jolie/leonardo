@@ -5,7 +5,9 @@ This is Leonardo, a web server written in [Jolie](https://www.jolie-lang.org/).
 You can use Leonardo as is, to host static files, or as a powerful server-generated pages framework.
 The implementation of server-generated pages is left to the user, by using _hooks_ (defined as Jolie services). See [Fabrizio's website](https://github.com/fmontesi/website) for an example using templates and external services.
 
-# Quick and Dirty kickstart with Docker
+Leonardo uses plain HTTP for serving content. To add encryption (HTTPS), we recommend combining it with a reverse proxy (for example, we like [linuxserver/letsencrypt](https://hub.docker.com/r/linuxserver/letsencrypt/)).
+
+# Start quickly with Docker for static content
 
 If you have Docker installed and you just want to host some static content, using Leonardo is really quick.
 First, pull the image from Docker Hub: `docker pull jolielang/leonardo`.
@@ -26,9 +28,9 @@ You just have to tell Leonardo where the static content is located. You can do i
 - Pass the content directory as an argument. For example, if your content is in `/var/www`, then you should run the command `jolie leonardo.ol /var/www`.
 - Pass the content directory by using the environment variable `LEONARDO_WWW`. In this case, you just need to invoke `jolie leonardo.ol` and you're done.
 
-## Make a Docker image with your own website
+# Make a Docker image with your own website
 
-Leonardo is available as the image `jolielang/leonardo` on Docker Hub. Here is a Dockerfile that creates an image for a website whose content is stored in directory `myWWW`.
+Here is a Dockerfile that creates an image for a website whose content is stored in directory `myWWW`.
 
 ```
 FROM jolielang/leonardo
