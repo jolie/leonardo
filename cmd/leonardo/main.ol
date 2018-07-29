@@ -121,6 +121,26 @@ init
 	maliciousSubstrings[2] = ".git"
 }
 
+define setRedirections
+{
+	for( redirection in config.redirection ) {
+		with( request ) {
+			.name = "#" + redirection.name;
+			.location = redirection.binding.location;
+			if ( is_defined( redirection.binding.protocol ) ) {
+				.protocol << redirection.binding.protocol
+			}
+		};
+		setOutputPort@Runtime( request )();
+		undef( request );
+		setRedirection@Runtime( {
+			.inputPortName = "HTTPInput",
+			.outputPortName = "#" + redirection.name,
+			.resourceName = redirection.name
+		} )()
+	}
+}
+
 init
 {
 	getenv@Runtime( "LEONARDO_WWW" )( config.wwwDir );
@@ -132,7 +152,8 @@ init
 		config.wwwDir = RootContentDirectory
 	};
 	if ( !Standalone ) {
-		config( config )()
+		config( config )();
+		setRedirections
 	};
 	loadHooks;
 	undef( config.PreResponseHook );

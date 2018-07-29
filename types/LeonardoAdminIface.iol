@@ -1,12 +1,16 @@
-type HookBinding:void {
+type LeonardoBinding:void {
 	.location:any
 	.protocol?:string { ? }
 }
 
 type LeonardoConfiguration:void {
 	.wwwDir?:string
-	.PreResponseHook?:HookBinding
-	.PostResponseHook?:HookBinding
+	.PreResponseHook?:LeonardoBinding
+	.PostResponseHook?:LeonardoBinding
+	.redirection*:void {
+		.name:string
+		.binding:LeonardoBinding
+	}
 }
 
 interface LeonardoAdminIface {
