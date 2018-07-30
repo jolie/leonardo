@@ -152,10 +152,12 @@ init
 		config.wwwDir = RootContentDirectory
 	};
 	if ( !Standalone ) {
-		config( config )();
-		setRedirections;
-		undef( config.redirection )
+		config( config )()
 	};
+
+	setRedirections;
+	undef( config.redirection );
+
 	loadHooks;
 	undef( config.PreResponseHook );
 	undef( config.PostResponseHook );
