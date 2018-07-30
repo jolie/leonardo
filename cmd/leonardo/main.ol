@@ -153,7 +153,8 @@ init
 	};
 	if ( !Standalone ) {
 		config( config )();
-		setRedirections
+		setRedirections;
+		undef( config.redirection )
 	};
 	loadHooks;
 	undef( config.PreResponseHook );
