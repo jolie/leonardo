@@ -41,6 +41,7 @@ Protocol: http {
 	.format -> format;
 	.contentType -> mime;
 	.statusCode -> statusCode;
+	.redirect -> redirect;
 	.cacheControl.maxAge -> cacheMaxAge;
 
 	.default = "default"
@@ -179,9 +180,12 @@ main
 	[ default( request )( response ) {
 		runPostResponseHook = false;
 		scope( s ) {
-			install( FileNotFound =>
+			install(
+			FileNotFound =>
 				println@Console( "File not found: " + file.filename )();
-				statusCode = 404
+				statusCode = 404,
+			MovedPermanently =>
+				statusCode = 301
 			);
 
 			split@StringUtils( request.operation { .regex = "\\?" } )( s );
@@ -205,7 +209,8 @@ main
 
 			isDirectory@File( file.filename )( isDirectory );
 			if ( isDirectory ) {
-				file.filename += "/" + DefaultPage
+				redirect = requestPath + "/";
+				throw( MovedPermanently )
 			};
 
 			getMimeType@File( file.filename )( mime );
