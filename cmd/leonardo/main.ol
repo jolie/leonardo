@@ -203,6 +203,11 @@ main
 
 			file.filename = config.wwwDir + requestPath;
 
+			isDirectory@File( file.filename )( isDirectory );
+			if ( isDirectory ) {
+				file.filename += "/" + DefaultPage
+			};
+
 			getMimeType@File( file.filename )( mime );
 			split@StringUtils( mime { .regex = "/" } )( s );
 			if ( s.result[0] == "text" ) {
