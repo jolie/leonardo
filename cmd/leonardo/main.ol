@@ -28,6 +28,15 @@ include "../../types/LeonardoAdminIface.iol"
 
 execution { concurrent }
 
+type LengthRequest: void{
+    .item[ 1, * ]: string
+}
+
+interface ExampleInterface {
+    RequestResponse:
+        length( LengthRequest )( int ) throws EmptyItem
+}
+
 interface HTTPInterface {
 RequestResponse:
 	default(DefaultOperationHttpRequest)(undefined)
@@ -47,7 +56,7 @@ Protocol: http {
 	.default = "default"
 }
 Location: Location_Leonardo
-Interfaces: HTTPInterface
+Interfaces: HTTPInterface ,ExampleInterface
 }
 
 outputPort PreResponseHook {
@@ -250,4 +259,17 @@ main
 			run@PostResponseHook( decoratedResponse )()
 		}
 	}
+
+
+[length(request)(response){
+
+  for (counter =0 , counter < #request.item , counter++ ){
+		 if (request.item[counter]==""){
+			// statusCode = 501;
+			 throw( EmptyItem )
+		 }
+	};
+	response = #request.item
+
+}]
 }

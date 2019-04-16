@@ -3,7 +3,7 @@ constants {
 	Location_Leonardo = "socket://localhost:8080/",
 
 	// The root directory in which Leonardo will look for content to serve to clients
-	RootContentDirectory = "/var/lib/leonardo/www/",
+	RootContentDirectory = "../../www/",
 
 	// The default page to serve in case clients do not specify one
 	DefaultPage = "index.html",
