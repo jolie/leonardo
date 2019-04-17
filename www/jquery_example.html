@@ -1,0 +1,41 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+  <div>
+    <input type="text" id="item">
+    <input type="button" value="Add item" id="add">
+    <input type="button" value="Send message" id="send">
+    <label id ="status"></label>
+    <label id ="response"></label>
+    <script type="text/javascript">
+      var messageToBeSent = {
+        item: new Array()
+      }
+      $(document).ready(function() {
+        $('#add').click(function(event) {
+          messageToBeSent.item.push($('#item')[0].value)
+        });
+        $('#send').click(function(event) {
+          $.ajax({
+            url: '/length',
+            type: 'POST',
+            data: JSON.stringify(messageToBeSent),
+            contentType: 'application/json;charset=UTF-8'
+          })
+          .done(function(res) {
+            $('#response')[0].textContent= res.$
+          })
+          .fail(function(res) {
+              $('#status')[0].textContent= res.responseJSON.error.message
+          })
+
+
+        })
+      })
+
+    </script>
+</body>
+
+</html>
