@@ -1,5 +1,5 @@
 /*
-   Copyright 2008-2018 Fabrizio Montesi <famontesi@gmail.com>
+   Copyright 2008-2019 Fabrizio Montesi <famontesi@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,53 +34,53 @@ RequestResponse:
 }
 
 inputPort HTTPInput {
-Protocol: http {
-	.keepAlive = true; // Keep connections open
-	.debug = DebugHttp;
-	.debug.showContent = DebugHttpContent;
-	.format -> format;
-	.contentType -> mime;
-	.statusCode -> statusCode;
-	.redirect -> redirect;
-	.cacheControl.maxAge -> cacheMaxAge;
+	protocol: http {
+		keepAlive = true // Keep connections open
+		debug = DebugHttp
+		debug.showContent = DebugHttpContent
+		format -> format
+		contentType -> mime
+		statusCode -> statusCode
+		redirect -> redirect
+		cacheControl.maxAge -> cacheMaxAge
 
-	.default = "default"
-}
-Location: Location_Leonardo
-Interfaces: HTTPInterface
+		default = "default"
+	}
+	location: Location_Leonardo
+	interfaces: HTTPInterface
 }
 
 outputPort PreResponseHook {
-Interfaces: PreResponseHookIface
+	interfaces: PreResponseHookIface
 }
 
 outputPort PostResponseHook {
-Interfaces: PostResponseHookIface
+	interfaces: PostResponseHookIface
 }
 
 inputPort Admin {
-Location: "local"
-Interfaces: LeonardoAdminIface
+	location: "local"
+	interfaces: LeonardoAdminIface
 }
 
 define setCacheHeaders
 {
-	shouldCache = false;
+	shouldCache = false
 	if ( s.result[0] == "image" ) {
 		shouldCache = true
 	} else {
-		e = file.filename;
-		e.suffix = ".js";
-		endsWith@StringUtils( e )( shouldCache );
+		e = file.filename
+		e.suffix = ".js"
+		endsWith@StringUtils( e )( shouldCache )
 		if ( !shouldCache ) {
-			e.suffix = ".css";
-			endsWith@StringUtils( e )( shouldCache );
+			e.suffix = ".css"
+			endsWith@StringUtils( e )( shouldCache )
 			if ( !shouldCache ) {
-					e.suffix = ".woff";
+					e.suffix = ".woff"
 					endsWith@StringUtils( e )( shouldCache )
 			}
 		}
-	};
+	}
 
 	if ( shouldCache ) {
 		cacheMaxAge = 60 * 60 * 2 // 2 hours
@@ -90,7 +90,7 @@ define setCacheHeaders
 define checkForMaliciousPath
 {
 	for( maliciousSubstring in maliciousSubstrings ) {
-		contains@StringUtils( s.result[0] { .substring = maliciousSubstring } )( b );
+		contains@StringUtils( s.result[0] { .substring = maliciousSubstring } )( b )
 		if ( b ) { throw( FileNotFound ) }
 	}
 }
@@ -101,8 +101,8 @@ define loadHooks
 		PreResponseHook << config.PreResponseHook
 	} else {
 		loadEmbeddedService@Runtime( {
-			.filepath = "../../internal/hooks/pre_response.ol",
-			.type = "Jolie"
+			filepath = "../../internal/hooks/pre_response.ol"
+			type = "Jolie"
 		} )( PreResponseHook.location )
 	};
 	if ( is_defined( config.PostResponseHook ) ) {
