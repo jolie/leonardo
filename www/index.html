@@ -1,21 +1,65 @@
 <html>
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<style>
+body {
+  font-family: 'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  padding: 100px;
+  font-size: 13px;
+}
+
+div {
+  background: #eee;
+  margin: 0 auto;
+  width: 200px;
+  padding: 100px;
+  text-align: center;
+  /* border-radius */
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  /* box-shadow */
+  -webkit-box-shadow: rgba(0,0,0,0.2) 0px 1px 3px;
+  -moz-box-shadow: rgba(0,0,0,0.2) 0px 1px 3px;
+  box-shadow: rgba(0,0,0,0.2) 0px 1px 3px;
+}
+.jolieLogo{
+  background: #000;
+}
+</style>
 </head>
+
 <body>
+  <div class="">
+    <img src="imgs/eye.png" alt="Jolie"  class="jolieLogo">
+    <p> This is an example page to show how to use JQuery AJAX in congiunction with Leornardo
+ </div>
   <div>
+    <p> Insert data into LengthRequest
     <input type="text" id="item">
     <input type="button" value="Add item" id="add">
     <input type="button" value="Send message" id="send">
     <label id ="status"></label>
     <label id ="response"></label>
-    <script type="text/javascript">
+  </div>
+  <div>
+    <div>
+      <p> requestMessage
+       <textarea rows = "10" cols = "20" id = "requestMessage" readonly></textarea>
+    </div>
+    <div>
+      <p> responseMessage
+       <textarea rows = "10" cols = "20" id = "responseMessage" readonly></textarea>
+    </div>
+  </div>
+  <script type="text/javascript">
       var messageToBeSent = {
         item: new Array()
       }
       $(document).ready(function() {
         $('#add').click(function(event) {
           messageToBeSent.item.push($('#item')[0].value)
+          $('#requestMessage')[0].textContent = JSON.stringify(messageToBeSent)
         });
         $('#send').click(function(event) {
           $.ajax({
