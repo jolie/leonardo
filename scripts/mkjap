@@ -1,0 +1,7 @@
+#!/bin/sh
+
+MODNAME="$(basename $PWD)"
+(
+	cd .. &&
+	zip -r $MODNAME/$MODNAME.jap $MODNAME -x '*/.*'
+)
