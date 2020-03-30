@@ -167,7 +167,7 @@ init
 	getFileSeparator@File()( fs );
 	config.wwwDir += fs;
 
-	getServiceDirectory@File()( dir );
+	getServiceParentPath@File()( dir );
 	setMimeTypeFile@File( dir + fs + ".." + fs + ".." + fs + "internal" + fs + "mime.types" )();
 	undef( dir ); undef( fs );
 
