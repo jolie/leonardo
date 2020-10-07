@@ -14,34 +14,34 @@
    limitations under the License.
 */
 
-include "console.iol"
-include "file.iol"
-include "protocols/http.iol"
-include "types/Binding.iol"
-include "runtime.iol"
-include "string_utils.iol"
+from console import Console
+from file import File
+from protocols.http import DefaultOperationHttpRequest
+from runtime import Runtime
+from string_utils import StringUtils
+from types.Binding import Binding
 
-include "config.iol"
+from .hooks import PreResponseHookIface, PostResponseHookIface
 
-from hooks import PreResponseHookIface, PostResponseHookIface
-
-type LeonardoBinding {
-	location:any
-	protocol?:string { ? }
-}
-
-type LeonardoConfiguration {
-	wwwDir?:string
-	PreResponseHook?:LeonardoBinding
-	PostResponseHook?:LeonardoBinding
-	redirection* {
-		name:string
-		binding:LeonardoBinding
+/// Configuration parameters
+type Params {
+	location?:string //< location on which the web server should be exposed. Default: socket://localhost:8080
+	wwwDir?:string //< path to the directory containing the web files. Default: /var/lib/leonardo/www/
+	defaultPage?:string	//< default page to be served when clients ask for a directory. Default: "index.html"
+	/// configuration parameters for the HTTP input port
+	httpConfig? {
+		/// default = false
+		debug?:bool { 
+			showContent?:bool //< default = false
+		}
 	}
-}
-
-interface LeonardoAdminIface {
-RequestResponse: config(LeonardoConfiguration)(void)
+	PreResponseHook?:Binding //< Binding to a custom PreResponseHook
+	PostResponseHook?:Binding //< Binding to a custom PostResponseHook
+	/// Redirections to sub-services
+	redirection* {
+		name:string //< name of the service
+		binding:Binding //< Binding to the target service
+	}
 }
 
 interface HTTPInterface {
@@ -49,67 +49,19 @@ RequestResponse:
 	default(DefaultOperationHttpRequest)(undefined)
 }
 
-define setCacheHeaders
-{
-	shouldCache = false
-	if ( s.result[0] == "image" ) {
-		shouldCache = true
-	} else {
-		e = file.filename
-		e.suffix = ".js"
-		endsWith@StringUtils( e )( shouldCache )
-		if ( !shouldCache ) {
-			e.suffix = ".css"
-			endsWith@StringUtils( e )( shouldCache )
-			if ( !shouldCache ) {
-					e.suffix = ".woff"
-					endsWith@StringUtils( e )( shouldCache )
-			}
-		}
-	}
+service Leonardo( params:Params ) {
+	execution: concurrent
 
-	if ( shouldCache ) {
-		cacheMaxAge = 60 * 60 * 2 // 2 hours
-	}
-}
-
-define checkForMaliciousPath
-{
-	for( maliciousSubstring in maliciousSubstrings ) {
-		contains@StringUtils( s.result[0] { .substring = maliciousSubstring } )( b )
-		if ( b ) { throw( FileNotFound ) }
-	}
-}
-
-define loadHooks
-{
-	if ( is_defined( config.PreResponseHook ) ) {
-		PreResponseHook << config.PreResponseHook
-	} else {
-		loadEmbeddedService@Runtime( {
-			filepath = "../../internal/hooks/pre_response.ol"
-			type = "Jolie"
-		} )( PreResponseHook.location )
-	}
-
-	if ( is_defined( config.PostResponseHook ) ) {
-		PostResponseHook << config.PostResponseHook
-	} else {
-		loadEmbeddedService@Runtime( {
-			.filepath = "../../internal/hooks/post_response.ol",
-			.type = "Jolie"
-		} )( PostResponseHook.location )
-	}
-}
-
-service Leonardo {
-	execution { concurrent }
+	embed Console as Console
+	embed StringUtils as StringUtils
+	embed File as File
+	embed Runtime as Runtime
 
 	inputPort HTTPInput {
 		protocol: http {
 			keepAlive = true // Keep connections open
-			debug = DebugHttp
-			debug.showContent = DebugHttpContent
+			debug = (!(params.httpConfig.debug instanceof void) && params.httpConfig.debug)
+			debug.showContent = (!(params.httpConfig.debug.showContent instanceof void) && params.httpConfig.debug.showContent)
 			format -> format
 			contentType -> mime
 			statusCode -> statusCode
@@ -130,21 +82,64 @@ service Leonardo {
 		interfaces: PostResponseHookIface
 	}
 
-	inputPort Admin {
-		location: "local"
-		interfaces: LeonardoAdminIface
+	define setCacheHeaders {
+		shouldCache = false
+		if ( s.result[0] == "image" ) {
+			shouldCache = true
+		} else {
+			e = file.filename
+			e.suffix = ".js"
+			endsWith@StringUtils( e )( shouldCache )
+			if ( !shouldCache ) {
+				e.suffix = ".css"
+				endsWith@StringUtils( e )( shouldCache )
+				if ( !shouldCache ) {
+						e.suffix = ".woff"
+						endsWith@StringUtils( e )( shouldCache )
+				}
+			}
+		}
+
+		if ( shouldCache ) {
+			cacheMaxAge = 60 * 60 * 2 // 2 hours
+		}
 	}
 
-	init
-	{
+	define checkForMaliciousPath {
+		for( maliciousSubstring in maliciousSubstrings ) {
+			contains@StringUtils( s.result[0] { substring = maliciousSubstring } )( b )
+			if ( b ) { throw( FileNotFound ) }
+		}
+	}
+
+	define loadHooks {
+		if ( is_defined( params.PreResponseHook ) ) {
+			PreResponseHook << params.PreResponseHook
+		} else {
+			loadEmbeddedService@Runtime( {
+				filepath = "../../internal/hooks/pre_response.ol"
+				type = "Jolie"
+			} )( PreResponseHook.location )
+		}
+
+		if ( is_defined( params.PostResponseHook ) ) {
+			PostResponseHook << params.PostResponseHook
+		} else {
+			loadEmbeddedService@Runtime( {
+				filepath = "../../internal/hooks/post_response.ol"
+				type = "Jolie"
+			} )( PostResponseHook.location )
+		}
+	}
+
+	init {
 		maliciousSubstrings[0] = ".."
 		maliciousSubstrings[1] = ".svn"
 		maliciousSubstrings[2] = ".git"
 	}
 
-	define setRedirections
-	{
-		for( redirection in config.redirection ) {
+	define setRedirections {
+		for( redirection in params.redirection ) {
 			with( request ) {
 				.name = "#" + redirection.name;
 				.location = redirection.binding.location;
@@ -162,8 +157,7 @@ service Leonardo {
 		}
 	}
 
-	init
-	{
+	init {
 		getenv@Runtime( "LEONARDO_WWW" )( config.wwwDir );
 		if ( is_defined( args[0] ) ) {
 			config.wwwDir = args[0]
@@ -171,10 +165,6 @@ service Leonardo {
 
 		if ( !is_defined( config.wwwDir ) || config.wwwDir instanceof void ) {
 			config.wwwDir = RootContentDirectory
-		}
-
-		if ( !Standalone ) {
-			config( config )()
 		}
 
 		setRedirections
@@ -197,11 +187,10 @@ service Leonardo {
 		println@Console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + config.wwwDir )()
 	}
 
-	main
-	{
+	main {
 		[ default( request )( response ) {
 			runPostResponseHook = false
-			scope( s ) {
+			scope( computeResponse ) {
 				install(
 					FileNotFound =>
 						println@Console( "File not found: " + file.filename )()
@@ -251,8 +240,8 @@ service Leonardo {
 				runPostResponseHook = true
 
 				install( PreResponseFault =>
-					response = s.PreResponseFault.response
-					statusCode = s.PreResponseFault.statusCode
+					response = computeResponse.PreResponseFault.response
+					statusCode = computeResponse.PreResponseFault.statusCode
 					runPostResponseHook = false
 				)
 				with( decoratedResponse ) {
