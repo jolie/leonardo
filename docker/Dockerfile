@@ -5,4 +5,4 @@ RUN rm -rf /leonardo/docker
 RUN rm -rf /leonardo/.git
 
 WORKDIR /leonardo
-CMD ["jolie","main.ol"]
+CMD ["jolie","launcher.ol"]
