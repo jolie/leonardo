@@ -25,9 +25,9 @@ from .hooks import PreResponseHookIface, PostResponseHookIface
 
 /// Configuration parameters
 type Params {
-	location?:string //< location on which the web server should be exposed. Default: socket://localhost:8080
+	location:string //< location on which the web server should be exposed.
 	wwwDir?:string //< path to the directory containing the web files. Default: /var/lib/leonardo/www/
-	defaultPage?:string	//< default page to be served when clients ask for a directory. Default: "index.html"
+	defaultPage:string	//< default page to be served when clients ask for a directory. Default: "index.html"
 	/// configuration parameters for the HTTP input port
 	httpConfig? {
 		/// default = false
@@ -58,10 +58,11 @@ service Leonardo( params:Params ) {
 	embed Runtime as Runtime
 
 	inputPort HTTPInput {
+		location: params.location
 		protocol: http {
 			keepAlive = true // Keep connections open
-			debug = (!(params.httpConfig.debug instanceof void) && params.httpConfig.debug)
-			debug.showContent = (!(params.httpConfig.debug.showContent instanceof void) && params.httpConfig.debug.showContent)
+			debug = is_defined( params.httpConfig.debug ) && params.httpConfig.debug
+			debug.showContent = is_defined( params.httpConfig.debug.showContent ) && params.httpConfig.debug.showContent
 			format -> format
 			contentType -> mime
 			statusCode -> statusCode
@@ -70,7 +71,6 @@ service Leonardo( params:Params ) {
 
 			default = "default"
 		}
-		location: Location_Leonardo
 		interfaces: HTTPInterface
 	}
 
@@ -84,23 +84,23 @@ service Leonardo( params:Params ) {
 
 	define setCacheHeaders {
 		shouldCache = false
-		if ( s.result[0] == "image" ) {
+		if( s.result[0] == "image" ) {
 			shouldCache = true
 		} else {
 			e = file.filename
 			e.suffix = ".js"
 			endsWith@StringUtils( e )( shouldCache )
-			if ( !shouldCache ) {
+			if( !shouldCache ) {
 				e.suffix = ".css"
 				endsWith@StringUtils( e )( shouldCache )
-				if ( !shouldCache ) {
+				if( !shouldCache ) {
 						e.suffix = ".woff"
 						endsWith@StringUtils( e )( shouldCache )
 				}
 			}
 		}
 
-		if ( shouldCache ) {
+		if( shouldCache ) {
 			cacheMaxAge = 60 * 60 * 2 // 2 hours
 		}
 	}
@@ -108,25 +108,27 @@ service Leonardo( params:Params ) {
 	define checkForMaliciousPath {
 		for( maliciousSubstring in maliciousSubstrings ) {
 			contains@StringUtils( s.result[0] { substring = maliciousSubstring } )( b )
-			if ( b ) { throw( FileNotFound ) }
+			if( b ) {
+				throw( FileNotFound )
+			}
 		}
 	}
 
 	define loadHooks {
-		if ( is_defined( params.PreResponseHook ) ) {
+		if( is_defined( params.PreResponseHook ) ) {
 			PreResponseHook << params.PreResponseHook
 		} else {
 			loadEmbeddedService@Runtime( {
-				filepath = "../../internal/hooks/pre_response.ol"
+				filepath = "internal/hooks/pre_response.ol"
 				type = "Jolie"
 			} )( PreResponseHook.location )
 		}
 
-		if ( is_defined( params.PostResponseHook ) ) {
+		if( is_defined( params.PostResponseHook ) ) {
 			PostResponseHook << params.PostResponseHook
 		} else {
 			loadEmbeddedService@Runtime( {
-				filepath = "../../internal/hooks/post_response.ol"
+				filepath = "internal/hooks/post_response.ol"
 				type = "Jolie"
 			} )( PostResponseHook.location )
 		}
@@ -158,33 +160,24 @@ service Leonardo( params:Params ) {
 	}
 
 	init {
-		getenv@Runtime( "LEONARDO_WWW" )( config.wwwDir );
-		if ( is_defined( args[0] ) ) {
-			config.wwwDir = args[0]
-		}
-
-		if ( !is_defined( config.wwwDir ) || config.wwwDir instanceof void ) {
-			config.wwwDir = RootContentDirectory
+		if( !is_defined( params.wwwDir ) ) {
+			params.wwwDir = "/var/lib/leonardo/www/"
 		}
 
 		setRedirections
-		undef( config.redirection )
-
 		loadHooks
-		undef( config.PreResponseHook )
-		undef( config.PostResponseHook )
 
-		toAbsolutePath@File( config.wwwDir )( config.wwwDir )
+		toAbsolutePath@File( params.wwwDir )( params.wwwDir )
 		getFileSeparator@File()( fs )
-		config.wwwDir += fs
+		params.wwwDir += fs
 
 		getServiceParentPath@File()( dir )
-		setMimeTypeFile@File( dir + fs + ".." + fs + ".." + fs + "internal" + fs + "mime.types" )()
+		setMimeTypeFile@File( dir + fs + "internal" + fs + "mime.types" )()
 		undef( dir )
 		undef( fs )
 
 		format = "html"
-		println@Console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + config.wwwDir )()
+		println@Console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + params.wwwDir )()
 	}
 
 	main {
@@ -201,37 +194,38 @@ service Leonardo( params:Params ) {
 
 				split@StringUtils( request.operation { regex = "\\?" } )( s )
 
-				// Default page
+				// <DefaultPage>
 				shouldAddIndex = false
-				if ( s.result[0] == "" ) {
+				if( s.result[0] == "" ) {
 					shouldAddIndex = true
 				} else {
 					endsWith@StringUtils( s.result[0] { suffix = "/" } )( shouldAddIndex )
 				}
-				if ( shouldAddIndex ) {
-					s.result[0] += DefaultPage
+				if( shouldAddIndex ) {
+					s.result[0] += params.defaultPage
 				}
+				// </DefaultPage>
 
-				checkForMaliciousPath;
+				checkForMaliciousPath
 
-				requestPath = s.result[0];
+				requestPath = s.result[0]
 
-				file.filename = config.wwwDir + requestPath;
+				file.filename = params.wwwDir + requestPath
 
-				isDirectory@File( file.filename )( isDirectory );
-				if ( isDirectory ) {
+				isDirectory@File( file.filename )( isDirectory )
+				if( isDirectory ) {
 					redirect = requestPath + "/"
 					throw( MovedPermanently )
 				}
 
 				getMimeType@File( file.filename )( mime )
 				split@StringUtils( mime { .regex = "/" } )( s )
-				if ( s.result[0] == "text" ) {
+				if( s.result[0] == "text" ) {
 					file.format = "text"
 					format = "html"
 				} else {
 					file.format = format = "binary"
-				};
+				}
 
 				setCacheHeaders
 
@@ -245,19 +239,19 @@ service Leonardo( params:Params ) {
 					runPostResponseHook = false
 				)
 				with( decoratedResponse ) {
-					.config -> config;
+					.config.wwwDir = params.wwwDir;
 					.request.path = requestPath;
 					if ( file.format == "text" ) {
 						.content -> response
 					}
 				}
 				run@PreResponseHook( decoratedResponse )( newResponse )
-				if ( !(newResponse instanceof void) ) {
+				if( !(newResponse instanceof void) ) {
 					response -> newResponse
 				}
 			}
 		} ] {
-			if ( runPostResponseHook ) {
+			if( runPostResponseHook ) {
 				run@PostResponseHook( decoratedResponse )()
 			}
 		}

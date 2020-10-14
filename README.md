@@ -25,8 +25,8 @@ If you simply want to use Leonardo to host some static content, you can run it a
 
 You just have to tell Leonardo where the static content is located. You can do it in two ways:
 
-- Pass the content directory as an argument. For example, if your content is in `/var/www`, then you should run the command `jolie main.ol /var/www` in directory `cmd/leonardo`.
-- Pass the content directory by using the environment variable `LEONARDO_WWW`. In this case, you just need to invoke `jolie main.ol` in directory `cmd/leonardo`.
+- Pass the content directory as an argument. For example, if your content is in `/var/www`, then you should run the command `jolie launcher.ol /var/www`.
+- Pass the content directory by using the environment variable `LEONARDO_WWW`. In this case, you just need to invoke `jolie launcher.ol`.
 
 # Make a Docker image with your own website
 

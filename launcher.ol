@@ -1,5 +1,5 @@
 /*
-   Copyright 2018-2020 Fabrizio Montesi <famontesi@gmail.com>
+   Copyright 2020 Fabrizio Montesi <famontesi@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,17 +14,30 @@
    limitations under the License.
 */
 
-from ...hooks import PostResponseHookIface
+from runtime import Runtime
 
-service DefaultPostResponseHook {
-	execution: concurrent
-
-	inputPort Input {
-		location: "local"
-		interfaces: PostResponseHookIface
-	}
-
+service Launcher {
+	embed Runtime as Runtime
 	main {
-		run( mesg )()
+		if ( is_defined( args[0] ) ) {
+			dir = args[0]
+		} else {
+			getenv@Runtime( "LEONARDO_WWW" )( dir )
+		}
+
+		if( !(dir instanceof void) ) {
+			config.wwwDir = dir
+		}
+
+		config.location = "socket://localhost:8080"
+		config.defaultPage = "index.html"
+
+		loadEmbeddedService@Runtime( {
+			filepath = "main.ol"
+			service = "Leonardo"
+			params -> config
+		} )()
+
+		linkIn( Shutdown )
 	}
 }
