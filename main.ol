@@ -23,6 +23,11 @@ from types.Binding import Binding
 
 from .hooks import PreResponseHookIface, PostResponseHookIface
 
+type LeonardoBinding {
+	location:any
+	protocol?:string { ? }
+}
+
 /// Configuration parameters
 type Params {
 	location:string //< location on which the web server should be exposed.
@@ -35,12 +40,12 @@ type Params {
 			showContent?:bool //< default = false
 		}
 	}
-	PreResponseHook?:Binding //< Binding to a custom PreResponseHook
-	PostResponseHook?:Binding //< Binding to a custom PostResponseHook
+	PreResponseHook?:LeonardoBinding //< Binding to a custom PreResponseHook
+	PostResponseHook?:LeonardoBinding //< Binding to a custom PostResponseHook
 	/// Redirections to sub-services
 	redirection* {
 		name:string //< name of the service
-		binding:Binding //< Binding to the target service
+		binding:LeonardoBinding //< Binding to the target service
 	}
 }
 
