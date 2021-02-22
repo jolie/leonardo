@@ -1,0 +1,23 @@
+{
+	"name": "leonardo",
+	"version": "0.3.0",
+	"description": "The Jolie Web Server",
+	"main": "launcher.ol",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jolie/leonardo.git"
+	},
+	"keywords": [
+		"jolie",
+		"microservices",
+		"web",
+		"web",
+		"server"
+	],
+	"author": "Fabrizio Montesi <famontesi@gmail.com>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/jolie/leonardo/issues"
+	},
+	"homepage": "https://github.com/jolie/leonardo#readme"
+}
