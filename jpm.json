@@ -9,11 +9,10 @@
 		"jolie",
 		"microservices",
 		"web",
-		"web",
 		"server"
 	],
 	"scripts": {
-		"jolive": "npx nodemon --exec jolie ./server.ol",
+		"jolive": "npx nodemon --exec jolie ./launcher.ol",
 		"clean": "rm ./hs_err_pid*"
 	},
 	"dependencies": {
