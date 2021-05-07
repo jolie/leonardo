@@ -2,7 +2,7 @@
 	"name": "@jolie/leonardo",
 	"description": "The Jolie Web Server",
 	"author": "Fabrizio Montesi <famontesi@gmail.com>",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"license": "Apache-2.0",
 	"main": "launcher.ol",
 	"keywords": [

@@ -39,7 +39,6 @@ service Launcher {
 
 		getRealServiceDirectory@file()( home )
 		getFileSeparator@file()( sep )
-		println@Console(home + sep + "main.ol")()
 
 		loadEmbeddedService@runtime( {
 			filepath = home + sep + "main.ol"
