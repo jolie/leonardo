@@ -1,5 +1,7 @@
+#!/usr/bin/env jolie
+
 /*
-   Copyright 2020 Fabrizio Montesi <famontesi@gmail.com>
+   Copyright 2020-2021 Fabrizio Montesi <famontesi@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,14 +17,17 @@
 */
 
 from runtime import Runtime
+from file import File
 
 service Launcher {
-	embed Runtime as Runtime
+	embed Runtime as runtime
+	embed File as file
+
 	main {
 		if ( is_defined( args[0] ) ) {
 			dir = args[0]
 		} else {
-			getenv@Runtime( "LEONARDO_WWW" )( dir )
+			getenv@runtime( "LEONARDO_WWW" )( dir )
 		}
 
 		if( !(dir instanceof void) ) {
@@ -32,8 +37,12 @@ service Launcher {
 		config.location = "socket://localhost:8080"
 		config.defaultPage = "index.html"
 
-		loadEmbeddedService@Runtime( {
-			filepath = "main.ol"
+		getRealServiceDirectory@file()( home )
+		getFileSeparator@file()( sep )
+		println@Console(home + sep + "main.ol")()
+
+		loadEmbeddedService@runtime( {
+			filepath = home + sep + "main.ol"
 			service = "Leonardo"
 			params -> config
 		} )()
