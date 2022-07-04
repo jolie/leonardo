@@ -18,7 +18,7 @@ from console import Console
 from file import File
 from protocols.http import DefaultOperationHttpRequest
 from runtime import Runtime
-from string_utils import StringUtils
+from string-utils import StringUtils
 from types.Binding import Binding
 
 from .hooks import PreResponseHookIface, PostResponseHookIface
@@ -51,16 +51,16 @@ type Params {
 
 interface HTTPInterface {
 RequestResponse:
-	default(DefaultOperationHttpRequest)(undefined)
+	default( DefaultOperationHttpRequest )( undefined )
 }
 
 service Leonardo( params:Params ) {
 	execution: concurrent
 
-	embed Console as Console
-	embed StringUtils as StringUtils
-	embed File as File
-	embed Runtime as Runtime
+	embed Console as console
+	embed StringUtils as stringUtils
+	embed File as file
+	embed Runtime as runtime
 
 	inputPort HTTPInput {
 		location: params.location
@@ -79,11 +79,11 @@ service Leonardo( params:Params ) {
 		interfaces: HTTPInterface
 	}
 
-	outputPort PreResponseHook {
+	outputPort preResponseHook {
 		interfaces: PreResponseHookIface
 	}
 
-	outputPort PostResponseHook {
+	outputPort postResponseHook {
 		interfaces: PostResponseHookIface
 	}
 
@@ -94,13 +94,13 @@ service Leonardo( params:Params ) {
 		} else {
 			e = file.filename
 			e.suffix = ".js"
-			endsWith@StringUtils( e )( shouldCache )
+			endsWith@stringUtils( e )( shouldCache )
 			if( !shouldCache ) {
 				e.suffix = ".css"
-				endsWith@StringUtils( e )( shouldCache )
+				endsWith@stringUtils( e )( shouldCache )
 				if( !shouldCache ) {
 						e.suffix = ".woff"
-						endsWith@StringUtils( e )( shouldCache )
+						endsWith@stringUtils( e )( shouldCache )
 				}
 			}
 		}
@@ -112,7 +112,7 @@ service Leonardo( params:Params ) {
 
 	define checkForMaliciousPath {
 		for( maliciousSubstring in maliciousSubstrings ) {
-			contains@StringUtils( s.result[0] { substring = maliciousSubstring } )( b )
+			contains@stringUtils( s.result[0] { substring = maliciousSubstring } )( b )
 			if( b ) {
 				throw( FileNotFound )
 			}
@@ -123,19 +123,19 @@ service Leonardo( params:Params ) {
 		if( is_defined( params.PreResponseHook ) ) {
 			PreResponseHook << params.PreResponseHook
 		} else {
-			loadEmbeddedService@Runtime( {
+			loadEmbeddedService@runtime( {
 				filepath = "internal/hooks/pre_response.ol"
 				type = "Jolie"
-			} )( PreResponseHook.location )
+			} )( preResponseHook.location )
 		}
 
 		if( is_defined( params.PostResponseHook ) ) {
 			PostResponseHook << params.PostResponseHook
 		} else {
-			loadEmbeddedService@Runtime( {
+			loadEmbeddedService@runtime( {
 				filepath = "internal/hooks/post_response.ol"
 				type = "Jolie"
-			} )( PostResponseHook.location )
+			} )( postResponseHook.location )
 		}
 	}
 
@@ -154,9 +154,9 @@ service Leonardo( params:Params ) {
 					.protocol << redirection.binding.protocol
 				}
 			}
-			setOutputPort@Runtime( request )()
+			setOutputPort@runtime( request )()
 			undef( request )
-			setRedirection@Runtime( {
+			setRedirection@runtime( {
 				inputPortName = "HTTPInput"
 				outputPortName = "#" + redirection.name
 				resourceName = redirection.name
@@ -172,17 +172,17 @@ service Leonardo( params:Params ) {
 		setRedirections
 		loadHooks
 
-		toAbsolutePath@File( params.wwwDir )( params.wwwDir )
-		getFileSeparator@File()( fs )
+		toAbsolutePath@file( params.wwwDir )( params.wwwDir )
+		getFileSeparator@file()( fs )
 		params.wwwDir += fs
 
-		getServiceParentPath@File()( dir )
-		setMimeTypeFile@File( dir + fs + "internal" + fs + "mime.types" )()
+		getServiceParentPath@file()( dir )
+		setMimeTypeFile@file( dir + fs + "internal" + fs + "mime.types" )()
 		undef( dir )
 		undef( fs )
 
 		format = "html"
-		println@Console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + params.wwwDir )()
+		println@console( "Leonardo started\n\tLocation: " + global.inputPorts.HTTPInput.location + "\n\tWeb directory: " + params.wwwDir )()
 	}
 
 	main {
@@ -191,20 +191,20 @@ service Leonardo( params:Params ) {
 			scope( computeResponse ) {
 				install(
 					FileNotFound =>
-						println@Console( "File not found: " + file.filename )()
+						println@console( "File not found: " + file.filename )()
 						statusCode = 404,
 					MovedPermanently =>
 						statusCode = 301
 				)
 
-				split@StringUtils( request.operation { regex = "\\?" } )( s )
+				split@stringUtils( request.operation { regex = "\\?" } )( s )
 
 				// <DefaultPage>
 				shouldAddIndex = false
 				if( s.result[0] == "" ) {
 					shouldAddIndex = true
 				} else {
-					endsWith@StringUtils( s.result[0] { suffix = "/" } )( shouldAddIndex )
+					endsWith@stringUtils( s.result[0] { suffix = "/" } )( shouldAddIndex )
 				}
 				if( shouldAddIndex ) {
 					s.result[0] += params.defaultPage
@@ -217,14 +217,14 @@ service Leonardo( params:Params ) {
 
 				file.filename = params.wwwDir + requestPath
 
-				isDirectory@File( file.filename )( isDirectory )
+				isDirectory@file( file.filename )( isDirectory )
 				if( isDirectory ) {
 					redirect = requestPath + "/"
 					throw( MovedPermanently )
 				}
 
-				getMimeType@File( file.filename )( mime )
-				split@StringUtils( mime { .regex = "/" } )( s )
+				getMimeType@file( file.filename )( mime )
+				split@stringUtils( mime { .regex = "/" } )( s )
 				if( s.result[0] == "text" ) {
 					file.format = "text"
 					format = "html"
@@ -234,7 +234,7 @@ service Leonardo( params:Params ) {
 
 				setCacheHeaders
 
-				readFile@File( file )( response )
+				readFile@file( file )( response )
 
 				runPostResponseHook = true
 
@@ -250,14 +250,14 @@ service Leonardo( params:Params ) {
 						.content -> response
 					}
 				}
-				run@PreResponseHook( decoratedResponse )( newResponse )
+				run@preResponseHook( decoratedResponse )( newResponse )
 				if( !(newResponse instanceof void) ) {
 					response -> newResponse
 				}
 			}
 		} ] {
 			if( runPostResponseHook ) {
-				run@PostResponseHook( decoratedResponse )()
+				run@postResponseHook( decoratedResponse )()
 			}
 		}
 	}

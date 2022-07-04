@@ -24,11 +24,9 @@ service Launcher {
 	embed File as file
 
 	main {
-		if ( is_defined( args[0] ) ) {
-			dir = args[0]
-		} else {
-			getenv@runtime( "LEONARDO_WWW" )( dir )
-		}
+		dir =
+			if( is_defined( args[0] ) ) args[0]
+			else getenv@runtime( "LEONARDO_WWW" )
 
 		if( !(dir instanceof void) ) {
 			config.wwwDir = dir
