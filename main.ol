@@ -163,6 +163,9 @@ service Leonardo( params:Params ) {
 				} )( getResult )
 				mime = getResult.mimeType
 				format = getResult.format
+				if( is_defined( getResult.cacheControl.maxAge ) ) {
+					cacheMaxAge = getResult.cacheControl.maxAge
+				}
 				
 				runPostResponseHook = true
 
@@ -204,6 +207,9 @@ type GetResponse {
 	format:string
 	path:string
 	mimeType:string
+	cacheControl? {
+		maxAge:int
+	}
 }
 
 interface WebFilesInterface {
@@ -237,7 +243,7 @@ service WebFiles {
 			|| endsWith@stringUtils( f.filename { suffix = ".js" } )
 			|| endsWith@stringUtils( f.filename { suffix = ".css" } )
 			|| endsWith@stringUtils( f.filename { suffix = ".woff" } ) ) {
-			cacheMaxAge = 60 * 60 * 2 // 2 hours
+			response.cacheControl.maxAge = 60 * 60 * 2 // 2 hours
 		}
 	}
 
