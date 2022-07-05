@@ -57,11 +57,6 @@ RequestResponse:
 service Leonardo( params:Params ) {
 	execution: concurrent
 
-	embed Console as console
-	embed StringUtils as stringUtils
-	embed File as file
-	embed Runtime as runtime
-
 	inputPort HTTPInput {
 		location: params.location
 		protocol: http {
@@ -73,7 +68,6 @@ service Leonardo( params:Params ) {
 			statusCode -> statusCode
 			redirect -> redirect
 			cacheControl.maxAge -> cacheMaxAge
-
 			default = "default"
 		}
 		interfaces: HTTPInterface
@@ -87,37 +81,11 @@ service Leonardo( params:Params ) {
 		interfaces: PostResponseHookIface
 	}
 
-	define setCacheHeaders {
-		shouldCache = false
-		if( s.result[0] == "image" ) {
-			shouldCache = true
-		} else {
-			e = file.filename
-			e.suffix = ".js"
-			endsWith@stringUtils( e )( shouldCache )
-			if( !shouldCache ) {
-				e.suffix = ".css"
-				endsWith@stringUtils( e )( shouldCache )
-				if( !shouldCache ) {
-						e.suffix = ".woff"
-						endsWith@stringUtils( e )( shouldCache )
-				}
-			}
-		}
-
-		if( shouldCache ) {
-			cacheMaxAge = 60 * 60 * 2 // 2 hours
-		}
-	}
-
-	define checkForMaliciousPath {
-		for( maliciousSubstring in maliciousSubstrings ) {
-			contains@stringUtils( s.result[0] { substring = maliciousSubstring } )( b )
-			if( b ) {
-				throw( FileNotFound )
-			}
-		}
-	}
+	embed Console as console
+	embed StringUtils as stringUtils
+	embed File as file
+	embed Runtime as runtime
+	embed WebFiles as webFiles
 
 	define loadHooks {
 		if( is_defined( params.preResponseHook ) ) {
@@ -137,12 +105,6 @@ service Leonardo( params:Params ) {
 				type = "Jolie"
 			} )( postResponseHook.location )
 		}
-	}
-
-	init {
-		maliciousSubstrings[0] = ".."
-		maliciousSubstrings[1] = ".svn"
-		maliciousSubstrings[2] = ".git"
 	}
 
 	define setRedirections {
@@ -191,45 +153,20 @@ service Leonardo( params:Params ) {
 			scope( computeResponse ) {
 				install(
 					FileNotFound =>
-						println@console( "File not found: " + file.filename )()
+						println@console( "File not found: " + computeResponse.FileNotFound )()
 						statusCode = 404,
 					MovedPermanently =>
 						statusCode = 301
 				)
 
-				split@stringUtils( request.operation { regex = "\\?" } )( s )
-
-				// <DefaultPage>
-				if( s.result[0] == "" || endsWith@stringUtils( s.result[0] { suffix = "/" } ) ) {
-					s.result[0] += params.defaultPage
-				}
-				// </DefaultPage>
-
-				checkForMaliciousPath
-
-				requestPath = s.result[0]
-
-				file.filename = params.wwwDir + requestPath
-
-				isDirectory@file( file.filename )( isDirectory )
-				if( isDirectory ) {
-					redirect = requestPath + "/"
-					throw( MovedPermanently )
-				}
-
-				getMimeType@file( file.filename )( mime )
-				split@stringUtils( mime { regex = "/" } )( s )
-				if( s.result[0] == "text" ) {
-					file.format = "text"
-					format = "html"
-				} else {
-					file.format = format = "binary"
-				}
-
-				setCacheHeaders
-
-				readFile@file( file )( response )
-
+				get@webFiles( {
+					target = request.operation
+					wwwDir = params.wwwDir
+					defaultPage = params.defaultPage
+				} )( getResult )
+				mime = getResult.mimeType
+				format = getResult.format
+				
 				runPostResponseHook = true
 
 				install( PreResponseFault =>
@@ -239,20 +176,113 @@ service Leonardo( params:Params ) {
 				)
 				with( decoratedResponse ) {
 					.config.wwwDir = params.wwwDir;
-					.request.path = requestPath;
-					if( file.format == "text" ) {
-						.content -> response
+					.request.path = getResult.path;
+					if( getResult.format == "html" ) {
+						.content -> getResult.content
 					}
 				}
 				run@preResponseHook( decoratedResponse )( newResponse )
 				if( !(newResponse instanceof void) ) {
 					response -> newResponse
+				} else {
+					response -> getResult.content
 				}
 			}
 		} ] {
 			if( runPostResponseHook ) {
 				run@postResponseHook( decoratedResponse )()
 			}
+		}
+	}
+}
+
+type GetRequest {
+	target:string
+	wwwDir:string
+	defaultPage:string
+}
+
+type GetResponse {
+	content:string | raw
+	format:string
+	path:string
+	mimeType:string
+}
+
+interface WebFilesInterface {
+RequestResponse:
+	get( GetRequest )( GetResponse ) throws FileNotFound MovedPermanently
+}
+
+service WebFiles {
+	execution: concurrent
+
+	inputPort Input {
+		location: "local"
+		interfaces: WebFilesInterface
+	}
+
+	embed StringUtils as stringUtils
+	embed File as file
+
+	init {
+		maliciousSubstrings[0] = ".."
+		maliciousSubstrings[1] = ".svn"
+		maliciousSubstrings[2] = ".git"
+	}
+
+	define setCacheHeaders {
+		if( s.result[0] == "image"
+			|| endsWith@stringUtils( f.filename { suffix = ".js" } )
+			|| endsWith@stringUtils( f.filename { suffix = ".css" } )
+			|| endsWith@stringUtils( f.filename { suffix = ".woff" } ) ) {
+			cacheMaxAge = 60 * 60 * 2 // 2 hours
+		}
+	}
+
+	define checkForMaliciousPath {
+		for( maliciousSubstring in maliciousSubstrings ) {
+			if( contains@stringUtils( s.result[0] { substring = maliciousSubstring } ) ) {
+				throw( FileNotFound )
+			}
+		}
+	}
+
+	main {
+		get( request )( response ) {
+			split@stringUtils( request.target { regex = "\\?" } )( s )
+
+			// <DefaultPage>
+			if( s.result[0] == "" || endsWith@stringUtils( s.result[0] { suffix = "/" } ) ) {
+				s.result[0] += request.defaultPage
+			}
+			// </DefaultPage>
+
+			checkForMaliciousPath
+
+			response.path = s.result[0]
+
+			f.filename = request.wwwDir + response.path
+
+			isDirectory@file( f.filename )( isDirectory )
+			if( isDirectory ) {
+				redirect = response.path + "/"
+				throw( MovedPermanently )
+			}
+
+			getMimeType@file( f.filename )( response.mimeType )
+			split@stringUtils( response.mimeType { regex = "/" } )( s )
+			if( s.result[0] == "text" ) {
+				f.format = "text"
+				response.format = "html"
+			} else {
+				f.format = "binary"
+				response.format = "binary"
+			}
+
+			setCacheHeaders
+
+			readFile@file( f )( response.content )
 		}
 	}
 }
