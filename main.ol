@@ -138,9 +138,6 @@ service Leonardo( params:Params ) {
 		getFileSeparator@file()( fs )
 		params.wwwDir += fs
 
-		getServiceParentPath@file()( dir )
-		setMimeTypeFile@file( dir + fs + "internal" + fs + "mime.types" )()
-		undef( dir )
 		undef( fs )
 
 		format = "html"
@@ -226,6 +223,10 @@ service WebFiles {
 	embed File as file
 
 	init {
+		// getFileSeparator@file()( fs )
+		// getServiceParentPath@file()( dir )
+		// setMimeTypeFile@file( dir + fs + "internal" + fs + "mime.types" )()
+		// undef( fs ); undef( dir )
 		maliciousSubstrings[0] = ".."
 		maliciousSubstrings[1] = ".svn"
 		maliciousSubstrings[2] = ".git"
