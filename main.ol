@@ -124,7 +124,7 @@ service Leonardo( params:Params ) {
 			PreResponseHook << params.PreResponseHook
 		} else {
 			loadEmbeddedService@runtime( {
-				filepath = "internal/hooks/pre_response.ol"
+				filepath = "internal/hooks/pre-response.ol"
 				type = "Jolie"
 			} )( preResponseHook.location )
 		}
@@ -133,7 +133,7 @@ service Leonardo( params:Params ) {
 			PostResponseHook << params.PostResponseHook
 		} else {
 			loadEmbeddedService@runtime( {
-				filepath = "internal/hooks/post_response.ol"
+				filepath = "internal/hooks/post-response.ol"
 				type = "Jolie"
 			} )( postResponseHook.location )
 		}
@@ -224,7 +224,7 @@ service Leonardo( params:Params ) {
 				}
 
 				getMimeType@file( file.filename )( mime )
-				split@stringUtils( mime { .regex = "/" } )( s )
+				split@stringUtils( mime { regex = "/" } )( s )
 				if( s.result[0] == "text" ) {
 					file.format = "text"
 					format = "html"
@@ -246,7 +246,7 @@ service Leonardo( params:Params ) {
 				with( decoratedResponse ) {
 					.config.wwwDir = params.wwwDir;
 					.request.path = requestPath;
-					if ( file.format == "text" ) {
+					if( file.format == "text" ) {
 						.content -> response
 					}
 				}

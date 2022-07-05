@@ -25,10 +25,10 @@ service Launcher {
 
 	main {
 		dir =
-			if( is_defined( args[0] ) ) args[0]
+			if( args[0] instanceof string ) args[0]
 			else getenv@runtime( "LEONARDO_WWW" )
 
-		if( !(dir instanceof void) ) {
+		if( dir instanceof string ) {
 			config.wwwDir = dir
 		}
 
