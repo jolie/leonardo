@@ -40,8 +40,8 @@ type Params {
 			showContent?:bool //< default = false
 		}
 	}
-	PreResponseHook?:LeonardoBinding //< Binding to a custom PreResponseHook
-	PostResponseHook?:LeonardoBinding //< Binding to a custom PostResponseHook
+	preResponseHook?:LeonardoBinding //< Binding to a custom PreResponseHook
+	postResponseHook?:LeonardoBinding //< Binding to a custom PostResponseHook
 	/// Redirections to sub-services
 	redirection* {
 		name:string //< name of the service
@@ -120,8 +120,8 @@ service Leonardo( params:Params ) {
 	}
 
 	define loadHooks {
-		if( is_defined( params.PreResponseHook ) ) {
-			PreResponseHook << params.PreResponseHook
+		if( is_defined( params.preResponseHook ) ) {
+			preResponseHook << params.preResponseHook
 		} else {
 			loadEmbeddedService@runtime( {
 				filepath = "internal/hooks/pre-response.ol"
@@ -129,8 +129,8 @@ service Leonardo( params:Params ) {
 			} )( preResponseHook.location )
 		}
 
-		if( is_defined( params.PostResponseHook ) ) {
-			PostResponseHook << params.PostResponseHook
+		if( is_defined( params.postResponseHook ) ) {
+			postResponseHook << params.postResponseHook
 		} else {
 			loadEmbeddedService@runtime( {
 				filepath = "internal/hooks/post-response.ol"
@@ -200,13 +200,7 @@ service Leonardo( params:Params ) {
 				split@stringUtils( request.operation { regex = "\\?" } )( s )
 
 				// <DefaultPage>
-				shouldAddIndex = false
-				if( s.result[0] == "" ) {
-					shouldAddIndex = true
-				} else {
-					endsWith@stringUtils( s.result[0] { suffix = "/" } )( shouldAddIndex )
-				}
-				if( shouldAddIndex ) {
+				if( s.result[0] == "" || endsWith@stringUtils( s.result[0] { suffix = "/" } ) ) {
 					s.result[0] += params.defaultPage
 				}
 				// </DefaultPage>
