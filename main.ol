@@ -153,6 +153,7 @@ service Leonardo( params:Params ) {
 						println@console( "File not found: " + computeResponse.FileNotFound )()
 						statusCode = 404,
 					MovedPermanently =>
+						redirect = computeResponse.MovedPermanently
 						statusCode = 301
 				)
 
@@ -199,7 +200,7 @@ service Leonardo( params:Params ) {
 type GetRequest {
 	target:string
 	wwwDir:string
-	defaultPage:string
+	defaultPage?:string ///< default: index.html
 }
 
 type GetResponse {
@@ -214,7 +215,7 @@ type GetResponse {
 
 interface WebFilesInterface {
 RequestResponse:
-	get( GetRequest )( GetResponse ) throws FileNotFound MovedPermanently
+	get( GetRequest )( GetResponse ) throws FileNotFound(string) MovedPermanently(string)
 }
 
 service WebFiles {
@@ -261,7 +262,10 @@ service WebFiles {
 
 			// <DefaultPage>
 			if( s.result[0] == "" || endsWith@stringUtils( s.result[0] { suffix = "/" } ) ) {
-				s.result[0] += request.defaultPage
+				s.result[0] +=
+					if( is_defined( request.defaultPage ) )
+						request.defaultPage
+					else "index.html"
 			}
 			// </DefaultPage>
 
@@ -274,7 +278,7 @@ service WebFiles {
 			isDirectory@file( f.filename )( isDirectory )
 			if( isDirectory ) {
 				redirect = response.path + "/"
-				throw( MovedPermanently )
+				throw( MovedPermanently, redirect )
 			}
 
 			getMimeType@file( f.filename )( response.mimeType )
