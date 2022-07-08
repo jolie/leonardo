@@ -20,6 +20,7 @@ from protocols.http import DefaultOperationHttpRequest
 from runtime import Runtime
 from string-utils import StringUtils
 from types.Binding import Binding
+from ganalytics import GoogleAnalytics
 
 from .hooks import PreResponseHookIface, PostResponseHookIface
 
@@ -86,6 +87,7 @@ service Leonardo( params:Params ) {
 	embed File as file
 	embed Runtime as runtime
 	embed WebFiles as webFiles
+	embed GoogleAnalytics as ga
 
 	define loadHooks {
 		if( is_defined( params.preResponseHook ) ) {
@@ -228,12 +230,14 @@ service WebFiles {
 
 	embed StringUtils as stringUtils
 	embed File as file
+	embed Console as console
 
 	init {
-		// getFileSeparator@file()( fs )
-		// getServiceParentPath@file()( dir )
-		// setMimeTypeFile@file( dir + fs + "internal" + fs + "mime.types" )()
-		// undef( fs ); undef( dir )
+		getFileSeparator@file()( fs )
+		getRealServiceDirectory@file()( dir )
+		setMimeTypeFile@file( dir + fs + "internal" + fs + "mime.types" )()
+		undef( fs )
+		undef( dir )
 		maliciousSubstrings[0] = ".."
 		maliciousSubstrings[1] = ".svn"
 		maliciousSubstrings[2] = ".git"
@@ -258,6 +262,11 @@ service WebFiles {
 
 	main {
 		get( request )( response ) {
+			getFileSeparator@file()( fs )
+			if( !endsWith@stringUtils( request.wwwDir { suffix = fs } ) ) {
+				request.wwwDir += fs
+			}
+
 			split@stringUtils( request.target { regex = "\\?" } )( s )
 
 			// <DefaultPage>
@@ -271,13 +280,14 @@ service WebFiles {
 
 			checkForMaliciousPath
 
-			response.path = s.result[0]
+			userPath = s.result[0]
+			response.path = request.wwwDir + userPath
 
-			f.filename = request.wwwDir + response.path
+			f.filename = response.path
 
 			isDirectory@file( f.filename )( isDirectory )
 			if( isDirectory ) {
-				redirect = response.path + "/"
+				redirect = userPath + "/"
 				throw( MovedPermanently, redirect )
 			}
 
