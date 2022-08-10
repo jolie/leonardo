@@ -64,11 +64,11 @@ service Leonardo( params:Params ) {
 			keepAlive = true // Keep connections open
 			debug = is_defined( params.httpConfig.debug ) && params.httpConfig.debug
 			debug.showContent = is_defined( params.httpConfig.debug.showContent ) && params.httpConfig.debug.showContent
-			format -> format
-			contentType -> mime
+			format -> httpParams.format
+			contentType -> httpParams.contentTYpe
 			statusCode -> statusCode
 			redirect -> redirect
-			cacheControl.maxAge -> cacheMaxAge
+			cacheControl.maxAge -> httpParams.cacheControl.maxAge
 			default = "default"
 		}
 		interfaces: HTTPInterface
@@ -164,11 +164,7 @@ service Leonardo( params:Params ) {
 					wwwDir = params.wwwDir
 					defaultPage = params.defaultPage
 				} )( getResult )
-				mime = getResult.mimeType
-				format = getResult.format
-				if( is_defined( getResult.cacheControl.maxAge ) ) {
-					cacheMaxAge = getResult.cacheControl.maxAge
-				}
+				httpParams -> getResult.httpParams
 				
 				runPostResponseHook = true
 
@@ -207,11 +203,14 @@ type GetRequest {
 
 type GetResponse {
 	content:string | raw
-	format:string
 	path:string
-	mimeType:string
-	cacheControl? {
-		maxAge:int
+
+	httpParams {
+		format:string
+		contentType:string
+		cacheControl? {
+			maxAge:int
+		}
 	}
 }
 
@@ -248,7 +247,7 @@ service WebFiles {
 			|| endsWith@stringUtils( f.filename { suffix = ".js" } )
 			|| endsWith@stringUtils( f.filename { suffix = ".css" } )
 			|| endsWith@stringUtils( f.filename { suffix = ".woff" } ) ) {
-			response.cacheControl.maxAge = 60 * 60 * 2 // 2 hours
+			response.httpParams.cacheControl.maxAge = 60 * 60 * 2 // 2 hours
 		}
 	}
 
@@ -269,14 +268,13 @@ service WebFiles {
 
 			split@stringUtils( request.target { regex = "\\?" } )( s )
 
-			// <DefaultPage>
+			// DefaultPage
 			if( s.result[0] == "" || endsWith@stringUtils( s.result[0] { suffix = "/" } ) ) {
 				s.result[0] +=
 					if( is_defined( request.defaultPage ) )
 						request.defaultPage
 					else "index.html"
 			}
-			// </DefaultPage>
 
 			checkForMaliciousPath
 
@@ -291,14 +289,14 @@ service WebFiles {
 				throw( MovedPermanently, redirect )
 			}
 
-			getMimeType@file( f.filename )( response.mimeType )
-			split@stringUtils( response.mimeType { regex = "/" } )( s )
+			getMimeType@file( f.filename )( response.httpParams.contentType )
+			split@stringUtils( response.httpParams.contentType { regex = "/" } )( s )
 			if( s.result[0] == "text" ) {
 				f.format = "text"
-				response.format = "html"
+				response.httpParams.format = "html"
 			} else {
 				f.format = "binary"
-				response.format = "binary"
+				response.httpParams.format = "binary"
 			}
 
 			setCacheHeaders
