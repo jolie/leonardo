@@ -238,6 +238,11 @@ service WebFiles {
 		maliciousSubstrings[0] = ".."
 		maliciousSubstrings[1] = ".svn"
 		maliciousSubstrings[2] = ".git"
+
+		install(
+			FileNotFound => nullProcess,
+			MovedPermanently => nullProcess
+		)
 	}
 
 	define setCacheHeaders {
