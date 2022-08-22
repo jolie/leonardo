@@ -20,7 +20,6 @@ from protocols.http import DefaultOperationHttpRequest
 from runtime import Runtime
 from string-utils import StringUtils
 from types.Binding import Binding
-from ganalytics import GoogleAnalytics
 
 from .hooks import PreResponseHookIface, PostResponseHookIface
 
@@ -87,7 +86,6 @@ service Leonardo( params:Params ) {
 	embed File as file
 	embed Runtime as runtime
 	embed WebFiles as webFiles
-	embed GoogleAnalytics as ga
 
 	define loadHooks {
 		if( is_defined( params.preResponseHook ) ) {
