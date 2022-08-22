@@ -1,0 +1,30 @@
+{
+	"name": "@jolie/leonardo",
+	"description": "The Jolie Web Server",
+	"author": "Fabrizio Montesi <famontesi@gmail.com>",
+	"version": "0.4.0",
+	"license": "Apache-2.0",
+	"main": "launcher.ol",
+	"keywords": [
+		"jolie",
+		"microservices",
+		"web",
+		"server"
+	],
+	"scripts": {
+		"jolive": "npx nodemon --exec jolie ./launcher.ol",
+		"clean": "rm ./hs_err_pid*"
+	},
+	"bugs": {
+		"url": "https://github.com/jolie/leonardo/issues"
+	},
+	"homepage": "https://github.com/jolie/leonardo#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jolie/leonardo.git"
+	},
+	"bin": {
+		"leonardo": "./launcher.ol"
+	},
+	"jolie": {}
+}
