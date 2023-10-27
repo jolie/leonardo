@@ -321,6 +321,7 @@ audio/x-voc voc
 audio/x-wav wav
 audio/x-xi xi
 audio/x-xm xm
+font/woff2 woff2
 image/bmp bmp
 image/cgm cgm
 image/dpx
