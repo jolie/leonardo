@@ -64,7 +64,7 @@ service Leonardo( params:Params ) {
 			debug = is_defined( params.httpConfig.debug ) && params.httpConfig.debug
 			debug.showContent = is_defined( params.httpConfig.debug.showContent ) && params.httpConfig.debug.showContent
 			format -> httpParams.format
-			contentType -> httpParams.contentTYpe
+			contentType -> httpParams.contentType
 			statusCode -> statusCode
 			redirect -> redirect
 			cacheControl.maxAge -> httpParams.cacheControl.maxAge
