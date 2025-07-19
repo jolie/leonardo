@@ -36,7 +36,7 @@ type Params {
 	/// configuration parameters for the HTTP input port
 	httpConfig? {
 		/// default = false
-		debug?:bool { 
+		debug?:bool {
 			showContent?:bool //< default = false
 		}
 	}
@@ -163,7 +163,7 @@ service Leonardo( params:Params ) {
 					defaultPage = params.defaultPage
 				} )( getResult )
 				httpParams -> getResult.httpParams
-				
+
 				runPostResponseHook = true
 
 				install( PreResponseFault =>
